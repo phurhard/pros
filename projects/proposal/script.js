@@ -24,13 +24,13 @@ const CONFIG = {
       icon: "🌸",
       title: "Your Smile & Laughter",
       date: "My Favorite View",
-      text: "There is no sound in this universe more beautiful than your laughter, and no sight more breath-taking than your smile. I lose myself in your beauty."
+      text: "There is no sound in this universe more beautifully romantic than your laughter, and no sight of great romantic view than your smile. I lose myself in your beauty."
     },
     {
       icon: "🛡️",
       title: "Our Quiet Strength",
       date: "The Partnership",
-      text: "How you stand by me, support my dreams, and trust in my heart has made me feel capable of conquering the world. With you, I am stronger, kinder, and complete."
+      text: "How you take things head-on, and always trust in my heart has made me feel capable of conquering the world. With you, I know I'll continue to be stronger, kinder, and more complete."
     }
   ],
 

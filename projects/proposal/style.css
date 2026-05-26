@@ -658,6 +658,13 @@ body::before {
 .proposal-card {
   justify-content: center;
   padding: 24px 16px;
+  transition: justify-content 0.3s ease;
+}
+
+/* Ensure that when the envelope is opened, the card aligns to the start so long text doesn't cut out at the top on smaller viewports */
+.proposal-card:has(.envelope.hidden),
+.proposal-card:has(#proposal-letter:not(.hidden)) {
+  justify-content: flex-start;
 }
 
 /* Envelope Graphics */
@@ -705,20 +712,20 @@ body::before {
   border-bottom: 85px solid hsl(340, 45%, 17%);
   border-top: 85px solid transparent;
   border-radius: 0 0 16px 16px;
-  z-index: 2;
+  z-index: 1;
 }
 
 /* Inside Preview Letter */
 .envelope-letter-preview {
   position: absolute;
-  top: 50%;
+  bottom: 6px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   width: 220px;
   height: 110px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -752,7 +759,7 @@ body::before {
 }
 
 .envelope.open .envelope-letter-preview {
-  transform: translate(-50%, -50%) translateY(-90px);
+  transform: translateX(-50%) translateY(-100px);
   z-index: 4;
   transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s;
 }
@@ -761,6 +768,7 @@ body::before {
 .letter-content {
   width: 100%;
   animation: expandLetter 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform-origin: top center;
   display: flex;
   flex-direction: column;
 }
@@ -1188,6 +1196,37 @@ body::before {
     height: 100px;
   }
   .envelope.open .envelope-letter-preview {
-    transform: translate(-50%, -50%) translateY(-80px);
+    transform: translateX(-50%) translateY(-90px);
+  }
+  .letter-header {
+    font-size: 1.8rem !important;
+    margin-bottom: 8px !important;
+  }
+  .letter-body {
+    font-size: 0.86rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 16px !important;
+    gap: 8px !important;
+  }
+  .big-question {
+    font-size: 1.6rem !important;
+    margin: 12px 0 16px !important;
+  }
+  .proposal-actions {
+    min-height: 100px !important;
+    gap: 8px !important;
+  }
+  .story-text {
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+    max-width: 95% !important;
+    margin-bottom: 12px !important;
+  }
+  .story-title {
+    font-size: 1.15rem !important;
+  }
+  .story-icon {
+    font-size: 3rem !important;
+    margin-bottom: 12px !important;
   }
 }

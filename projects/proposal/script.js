@@ -600,6 +600,7 @@ function closePetalDetail() {
  ***********************************************************/
 
 let currentQuestionIndex = 0;
+let questionAnswering = false;
 
 function renderQuestion() {
   const q = CONFIG.QUESTIONS[currentQuestionIndex];
@@ -633,14 +634,16 @@ function renderQuestion() {
 
 function answerQuestion(answer) {
   if (answer !== 'yes') return;
-  
+  if (questionAnswering) return;
+  questionAnswering = true;
+
   const q = CONFIG.QUESTIONS[currentQuestionIndex];
   const reactionEl = document.getElementById('question-reaction');
-  
+
   // Show reaction
   reactionEl.textContent = q.reaction;
   reactionEl.classList.add('visible');
-  
+
   // Sparkle burst
   for (let i = 0; i < 12; i++) {
     setTimeout(() => {
@@ -651,14 +654,15 @@ function answerQuestion(answer) {
       particles.push(p);
     }, i * 40);
   }
-  
+
   // Mark current dot as completed
   const dot = document.getElementById(`q-dot-${currentQuestionIndex}`);
   dot.classList.remove('active');
   dot.classList.add('completed');
-  
+
   // Advance after showing reaction
   setTimeout(() => {
+    questionAnswering = false;
     currentQuestionIndex++;
     if (currentQuestionIndex < CONFIG.QUESTIONS.length) {
       renderQuestion();
@@ -702,8 +706,13 @@ function openEnvelope() {
   // Wait for envelope unfolding transition, then hide envelope and slide letter up
   setTimeout(() => {
     env.classList.add('hidden');
-    document.getElementById('proposal-letter').classList.remove('hidden');
-    
+    const letter = document.getElementById('proposal-letter');
+    letter.classList.remove('hidden');
+
+    // Ensure card is scrolled to top so letter header is never clipped
+    const card = document.querySelector('.proposal-card');
+    if (card) card.scrollTop = 0;
+
     // Reposition the No button dynamically in the actions block initially
     resetNoButton();
   }, 1200);

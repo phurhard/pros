@@ -5,9 +5,9 @@
 
 const CONFIG = {
   HER_NAME: "Hikmah Omolola Owoyemi",
-  YOUR_NAME: "Fuhad",
-  WHATSAPP_NUMBER: "+2348156336247", // Replace with your WhatsApp (include country code, e.g. +1234567890)
-  START_DATE: new Date("2026-05-26T13:30:00"), // Starting date for countdown (use YYYY-MM-DDTHH:MM:SS format)
+  YOUR_NAME: "phurhard",
+  WHATSAPP_NUMBER: "+2348156336247",
+  START_DATE: new Date("2026-05-26T13:30:00"),
   
   // Stages configuration
   INTRO_TYPING_TEXT: "From the very first moment we talked, I knew there was something magical about you. We've built sweet memories, shared deep laughs, and stood by each other. Now, I want to take a walk down memory lane with you...",
@@ -994,7 +994,7 @@ function celebrateLove() {
   synthTempo = 220; // Faster, lighter tempo
   
   // 5. Update prefilled WhatsApp text link
-  const text = encodeURIComponent(`Yes, ${CONFIG.YOUR_NAME}! A million times YES! I will gladly be your girlfriend and walk this beautiful life by your side! ❤️💍`);
+  const text = encodeURIComponent(`🥰🥰 Yes, ${CONFIG.YOUR_NAME}! A million times YES! I will gladly be your girlfriend and walk this beautiful life by your side! ❤️💍`);
   document.getElementById('wa-link').href = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${text}`;
   
   // 6. Transition to final page

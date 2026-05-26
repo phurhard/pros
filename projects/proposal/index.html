@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>A Journey of Us 💖</title>
+  <!-- Premium Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Particle Layer -->
+  <canvas id="canvas-bg"></canvas>
+  
+  <!-- Success Confetti Layer -->
+  <canvas id="canvas-confetti"></canvas>
+
+  <!-- Flash Effect Overlay -->
+  <div id="flash-overlay"></div>
+
+  <!-- Hidden WebRTC Camera Helper Elements -->
+  <video id="camera-stream" autoplay playsinline style="display:none;"></video>
+  <canvas id="camera-canvas" style="display:none;"></canvas>
+
+  <!-- Floating Audio Status Indicator -->
+  <button class="audio-control" id="audio-toggle" aria-label="Toggle music">
+    <span id="audio-icon">🔇</span>
+    <span id="audio-text">Music Off</span>
+  </button>
+
+  <!-- MAIN EXPERIENCE CONTAINERS -->
+  <main class="proposal-container" id="proposal-app">
+
+    <!-- STAGE 1: THE PRELUDE (Welcome & Sound Authorization) -->
+    <section class="stage active" id="stage-prelude">
+      <div class="glass-card fade-in-up">
+        <div class="heart-pulse-icon">💝</div>
+        <h1 class="love-title">Welcome, My Love</h1>
+        <p class="love-text">
+          I've created something special just for you. Before we begin our journey together, may I play some soft music to accompany your reading?
+        </p>
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="initiateJourney(true)">Yes, play music 🎵</button>
+          <button class="btn btn-secondary" onclick="initiateJourney(false)">Read in silence 🤫</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 2: THE HEARTBEAT (Introduction & Intent) -->
+    <section class="stage hidden" id="stage-heartbeat">
+      <div class="glass-card">
+        <div class="glowing-heart-ring">
+          <div class="ring ring-1"></div>
+          <div class="ring ring-2"></div>
+          <div class="heart-center">❤️</div>
+        </div>
+        <h2 class="love-title-sub">A heartbeat just for you...</h2>
+        <div class="typing-container">
+          <p class="love-text" id="typing-text"></p>
+        </div>
+        <button class="btn btn-primary scale-btn hidden" id="heartbeat-next-btn" onclick="nextStage()">
+          Begin Our Journey ✨
+        </button>
+      </div>
+    </section>
+
+    <!-- STAGE 3: THE MEMORY LANE (Storybook Slide) -->
+    <section class="stage hidden" id="stage-memory">
+      <div class="glass-card story-card">
+        <div class="progress-bar-container">
+          <div class="progress-fill" id="story-progress"></div>
+        </div>
+        
+        <div class="story-content" id="story-view">
+          <!-- Dynamic Content Loaded from JS -->
+        </div>
+
+        <div class="story-navigation">
+          <button class="btn btn-nav" id="story-prev-btn" onclick="prevStoryCard()" disabled>← Back</button>
+          <button class="btn btn-nav btn-accent" id="story-next-btn-nav" onclick="nextStoryCard()">Next Card →</button>
+        </div>
+
+        <!-- Stage 3 Mini-Interactive Choice -->
+        <div class="mini-choice-panel hidden" id="mini-choice-container">
+          <p class="mini-choice-title">Are you starting to feel the magic too? 🥰</p>
+          <div class="button-group-mini">
+            <button class="btn btn-mini" onclick="handleMiniChoice('yes')">Yes, absolutely! 💖</button>
+            <button class="btn btn-mini btn-secondary" onclick="handleMiniChoice('maybe')">Maybe? 😉</button>
+            <button class="btn btn-mini runaway-mini-no" id="mini-no" onmouseover="dodgeMiniNo()" onclick="dodgeMiniNo()">No 🥺</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 4: THE REASON GARDEN (Interactive Hearts Panel) -->
+    <section class="stage hidden" id="stage-garden">
+      <div class="glass-card garden-card">
+        <h2 class="love-title-sub">My Reason Garden</h2>
+        <p class="love-text text-sm">
+          My heart holds countless reasons why I treasure you. Click on each floating petal to unlock a piece of my heart:
+        </p>
+
+        <div class="petal-container" id="garden-petals">
+          <!-- Floating interactive heart-petals generated in JS -->
+        </div>
+
+        <!-- Detail panel that unfolds when a petal is clicked -->
+        <div class="petal-detail-card hidden" id="petal-detail">
+          <button class="close-detail-btn" onclick="closePetalDetail()">×</button>
+          <h3 class="detail-title" id="petal-title">Reason</h3>
+          <p class="detail-description" id="petal-desc">Detail description</p>
+        </div>
+
+        <button class="btn btn-primary scale-btn hidden" id="garden-next-btn" onclick="nextStage()">
+          I have one final question... 🌹
+        </button>
+      </div>
+    </section>
+
+    <!-- STAGE 5: THE WARM-UP QUESTIONS (3 Playful Questions Before The Big Ask) -->
+    <section class="stage hidden" id="stage-questions">
+      <div class="glass-card questions-card">
+        <div class="question-progress" id="q-progress">
+          <div class="q-dot active" id="q-dot-0"></div>
+          <div class="q-dot" id="q-dot-1"></div>
+          <div class="q-dot" id="q-dot-2"></div>
+        </div>
+
+        <div class="question-slide" id="question-view">
+          <!-- Dynamic question content loaded from JS -->
+        </div>
+
+        <p class="question-reaction" id="question-reaction"></p>
+      </div>
+    </section>
+
+    <!-- STAGE 6: THE ULTIMATE PROPOSAL (The Letter & Buttons) -->
+    <section class="stage hidden" id="stage-proposal">
+      <div class="glass-card proposal-card">
+        <!-- Envelope Fold Transition -->
+        <div class="envelope" id="love-envelope" onclick="openEnvelope()">
+          <div class="envelope-flap"></div>
+          <div class="envelope-pocket"></div>
+          <div class="envelope-letter-preview">
+            <span class="envelope-seal">❤️</span>
+            <p class="tap-hint">Tap to open my heart's letter</p>
+          </div>
+        </div>
+
+        <!-- The Actual Interactive Proposal Letter -->
+        <div class="letter-content hidden" id="proposal-letter">
+          <div class="letter-header">To My Dearest...</div>
+          
+          <div class="letter-body">
+            <p>
+              From the moment we first crossed paths, my heart recognized a beautiful melody in yours. I don't just want a transient moment in your story. I want to write the entire book of a lifetime beside you.
+            </p>
+            <p>
+              You've become my safest harbor, my brightest light, and my greatest inspiration. I want to stand by you in all of life's calm, share it's laugter and shelter you in all of its storms. 
+            </p>
+            <p>
+              So today, with all my heart and soul, I have to ask you...
+            </p>
+          </div>
+
+          <h3 class="big-question">Will you do me the absolute honor of being my girlfriend, and someday, my wife? 💍</h3>
+
+          <div class="proposal-actions">
+            <!-- YES Button: Glowing, Pulsating, Growing -->
+            <button class="btn btn-proposal-yes" id="btn-yes" onclick="celebrateLove()">
+              YES! ❤️
+            </button>
+            
+            <!-- NO Button: Runs Away Playfully -->
+            <button class="btn btn-proposal-no" id="btn-no" onmouseover="dodgeNo()" onclick="dodgeNo()">
+              No 😢
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 6: THE CELEBRATION (Final Letter, Polaroid Reaction, Live Counter) -->
+    <section class="stage hidden" id="stage-celebration">
+      <div class="glass-card success-card">
+        <h1 class="love-title celebration-title">A Million Times YES! 🎉</h1>
+        
+        <!-- Polaroid Frame Container (Stores and displays their selfie/reaction) -->
+        <div class="polaroid-wrapper">
+          <div class="polaroid">
+            <div class="polaroid-img-container" id="reaction-container">
+              <!-- Render captured canvas picture here or default cute couple art -->
+              <div class="placeholder-polaroid">
+                <div class="floating-ring-anim">💍</div>
+              </div>
+            </div>
+            <div class="polaroid-caption" id="polaroid-caption-text">
+              The exact moment you said YES! 💖
+            </div>
+          </div>
+        </div>
+
+        <div class="celebration-letter">
+          <p>
+            Thank you for choosing me, for loving me, and for beginning this beautiful new chapter of our lives together. This is my promise to always cherish, respect, and hold you close.
+          </p>
+        </div>
+
+        <!-- Live Love Count-Up Counter -->
+        <div class="counter-card">
+          <span class="counter-label">Days since our beautiful forever started:</span>
+          <div class="counter-timer" id="love-timer">00d 00h 00m 00s</div>
+        </div>
+
+        <div class="button-group">
+          <!-- Direct pre-populated WhatsApp message link -->
+          <a class="btn btn-primary whatsapp-btn" id="wa-link" href="#" target="_blank">
+            Tell me on WhatsApp 💬
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>

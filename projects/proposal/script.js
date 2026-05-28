@@ -84,6 +84,43 @@ const CONFIG = {
 };
 
 /***********************************************************
+ * 📊 TELEMETRY 📊
+ * POSTs key interaction events to /api/log — visible in Vercel function logs.
+ * Silent-fails locally or when the endpoint is unavailable.
+ ***********************************************************/
+
+const Telemetry = (() => {
+  const device = (() => {
+    const ua = navigator.userAgent;
+    const isTablet = /iPad|Android(?!.*Mobile)/i.test(ua);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const os = /iPhone|iPad|iPod/.test(ua) ? 'iOS'
+      : /Android/.test(ua) ? 'Android'
+      : /Windows/.test(ua) ? 'Windows'
+      : /Mac/.test(ua) ? 'macOS' : 'Other';
+    return {
+      type: isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop',
+      os,
+      screen: `${screen.width}x${screen.height}`,
+      lang: navigator.language
+    };
+  })();
+
+  function track(event, data = {}) {
+    const payload = { event, timestamp: new Date().toISOString(), device, ...data };
+    fetch('/api/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {});
+  }
+
+  return { track };
+})();
+
+
+/***********************************************************
  * 🎵 PROCEDURAL WEB AUDIO API SYNTHESIZER (ROMANTIC PIANO) 🎵
  * Plays a gorgeous ambient arpeggio 100% offline!
  ***********************************************************/
@@ -361,8 +398,11 @@ const STAGE_IDS = {
 };
 
 let currentStageIndex = 1;
+let miniNoDodgeCount = 0;
+let qNoDodgeCount = 0;
 
 function showStage(stageNum) {
+  Telemetry.track('stage_enter', { stage: stageNum });
   const currentStage = document.querySelector('.stage.active');
   const stageId = STAGE_IDS[stageNum];
   const nextStage = document.getElementById(stageId);
@@ -399,6 +439,7 @@ function nextStage() {
 }
 
 function initiateJourney(enableSound) {
+  Telemetry.track('journey_started', { with_music: enableSound });
   if (enableSound) {
     toggleAudio();
   }
@@ -429,6 +470,7 @@ function typeChar() {
     const delay = CONFIG.INTRO_TYPING_TEXT.charAt(typingIndex - 1) === '.' ? 500 : Math.random() * 30 + 20;
     setTimeout(typeChar, delay);
   } else {
+    Telemetry.track('typing_completed');
     // Show the button with a glowing fade transition once text typing is done
     heartbeatNextBtn.classList.remove('hidden');
   }
@@ -479,6 +521,7 @@ function nextStoryCard() {
   } else {
     // Before moving to Stage 4, trigger the intermediate Mini-Choice card!
     if (!miniChoiceTriggered) {
+      miniNoDodgeCount = 0;
       document.getElementById('mini-choice-container').classList.remove('hidden');
     } else {
       nextStage();
@@ -494,6 +537,7 @@ function prevStoryCard() {
 }
 
 function handleMiniChoice(answer) {
+  Telemetry.track('mini_choice', { answer });
   const container = document.getElementById('mini-choice-container');
   
   if (answer === 'yes') {
@@ -524,17 +568,47 @@ function handleMiniChoice(answer) {
   }
 }
 
-// Runaway Mini "No" Button dodging logic
+// Mini "No" Button — dodges twice, then settles and advances gracefully on click
 function dodgeMiniNo() {
   const noBtn = document.getElementById('mini-no');
+  if (!noBtn) return;
+
+  if (miniNoDodgeCount >= 2) {
+    handleMiniNoClick();
+    return;
+  }
+
+  miniNoDodgeCount++;
+  Telemetry.track('no_dodged', { stage: 'mini_choice', count: miniNoDodgeCount });
+
   const x = Math.random() * 120 - 60;
   const y = Math.random() * 120 - 60;
   noBtn.style.transform = `translate(${x}px, ${y}px) scale(0.8)`;
-  
-  // Switch up text tags
+
   const container = document.getElementById('mini-choice-container');
   const title = container.querySelector('.mini-choice-title');
   title.textContent = "Access Denied! The universe insists on magic! 😂💖";
+
+  if (miniNoDodgeCount >= 2) {
+    setTimeout(() => {
+      noBtn.style.transform = 'none';
+      noBtn.style.transition = 'all 0.5s ease';
+      noBtn.textContent = "No 🥺";
+      noBtn.onmouseover = null;
+    }, 800);
+  }
+}
+
+function handleMiniNoClick() {
+  const container = document.getElementById('mini-choice-container');
+  const title = container.querySelector('.mini-choice-title');
+  title.textContent = "That's okay... let me show you something beautiful first 🌸";
+
+  setTimeout(() => {
+    container.classList.add('hidden');
+    miniChoiceTriggered = true;
+    nextStage();
+  }, 2000);
 }
 
 
@@ -572,6 +646,7 @@ function openPetal(index) {
   // Track unique clicks
   if (!clickedPetalsSet.has(index)) {
     clickedPetalsSet.add(index);
+    Telemetry.track('petal_opened', { index, title: reason.title });
     document.getElementById(`petal-${index}`).classList.add('clicked');
     
     // Sparkle particles when a petal is opened
@@ -585,6 +660,7 @@ function openPetal(index) {
   
   // Check if all reasons are unlocked
   if (clickedPetalsSet.size === CONFIG.REASONS.length) {
+    Telemetry.track('all_petals_opened');
     document.getElementById('garden-next-btn').classList.remove('hidden');
   }
 }
@@ -603,6 +679,7 @@ let currentQuestionIndex = 0;
 let questionAnswering = false;
 
 function renderQuestion() {
+  qNoDodgeCount = 0;
   const q = CONFIG.QUESTIONS[currentQuestionIndex];
   const view = document.getElementById('question-view');
   const reactionEl = document.getElementById('question-reaction');
@@ -636,6 +713,7 @@ function answerQuestion(answer) {
   if (answer !== 'yes') return;
   if (questionAnswering) return;
   questionAnswering = true;
+  Telemetry.track('question_answered', { question: currentQuestionIndex, answer: 'yes' });
 
   const q = CONFIG.QUESTIONS[currentQuestionIndex];
   const reactionEl = document.getElementById('question-reaction');
@@ -676,12 +754,19 @@ function answerQuestion(answer) {
 function dodgeQuestionNo() {
   const noBtn = document.getElementById('q-no-btn');
   if (!noBtn) return;
-  
+
+  if (qNoDodgeCount >= 2) {
+    handleQuestionNo();
+    return;
+  }
+
+  qNoDodgeCount++;
+  Telemetry.track('no_dodged', { stage: 'questions', question: currentQuestionIndex, count: qNoDodgeCount });
+
   const x = Math.random() * 140 - 70;
   const y = Math.random() * 80 - 40;
   noBtn.style.transform = `translate(${x}px, ${y}px) scale(0.85)`;
-  
-  // Tease messages
+
   const teases = [
     "Nice try! 😂",
     "Not an option! 💖",
@@ -691,6 +776,42 @@ function dodgeQuestionNo() {
     "Love always wins! ✨"
   ];
   noBtn.textContent = teases[Math.floor(Math.random() * teases.length)];
+
+  if (qNoDodgeCount >= 2) {
+    setTimeout(() => {
+      noBtn.style.transform = 'none';
+      noBtn.style.transition = 'all 0.5s ease';
+      noBtn.textContent = "No 🥺";
+      noBtn.onmouseover = null;
+    }, 800);
+  }
+}
+
+function handleQuestionNo() {
+  if (questionAnswering) return;
+  questionAnswering = true;
+
+  Telemetry.track('question_answered', { question: currentQuestionIndex, answer: 'no' });
+
+  const reactionEl = document.getElementById('question-reaction');
+  reactionEl.textContent = "It's okay, take your time... I'm still here for you 🌸";
+  reactionEl.classList.add('visible');
+
+  const dot = document.getElementById(`q-dot-${currentQuestionIndex}`);
+  if (dot) {
+    dot.classList.remove('active');
+    dot.classList.add('completed');
+  }
+
+  setTimeout(() => {
+    questionAnswering = false;
+    currentQuestionIndex++;
+    if (currentQuestionIndex < CONFIG.QUESTIONS.length) {
+      renderQuestion();
+    } else {
+      nextStage();
+    }
+  }, 2200);
 }
 
 
@@ -700,6 +821,7 @@ function dodgeQuestionNo() {
  ***********************************************************/
 
 function openEnvelope() {
+  Telemetry.track('envelope_opened');
   const env = document.getElementById('love-envelope');
   env.classList.add('open');
   
@@ -910,12 +1032,14 @@ async function captureSelfie() {
     
     // Save to LocalStorage to permanently serve as a romantic keepsake
     localStorage.setItem('proposal_reaction_photo', base64Img);
+    Telemetry.track('selfie_result', { success: true });
     renderPolaroidSelfie(base64Img);
-    
+
     // Stop all WebRTC tracks immediately to release hardware/camera lights
     stream.getTracks().forEach(track => track.stop());
   } catch (err) {
     console.warn("Unable to capture reaction image, using beautiful couple art fallback:", err);
+    Telemetry.track('selfie_result', { success: false });
     renderPolaroidFallback();
   }
 }
@@ -974,8 +1098,9 @@ function startLoveTimer() {
 }
 
 function celebrateLove() {
+  Telemetry.track('proposal_accepted');
   celebrationActive = true;
-  
+
   // 1. Trigger full-screen confetti
   resizeConfettiCanvas();
   window.addEventListener('resize', resizeConfettiCanvas);
@@ -1011,6 +1136,7 @@ function celebrateLove() {
  ***********************************************************/
 
 window.onload = () => {
+  Telemetry.track('site_visit');
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
   animateParticles();
